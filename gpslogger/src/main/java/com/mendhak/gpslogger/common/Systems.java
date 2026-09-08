@@ -414,4 +414,27 @@ public class Systems {
             return sdf.format(calendar.getTime());
         }
     }
+
+    /**
+     * Holds the logging start back by a caller-requested warm-up period, used so
+     * an external trigger can line the first fix up with some other event.
+     */
+    public static void pauseBeforeStart(int seconds) {
+        long millis = toMilliseconds(seconds);
+        sleepQuietly(millis);
+    }
+
+    private static long toMilliseconds(int seconds) {
+        return seconds * 1000L;
+    }
+
+    private static void sleepQuietly(long millis) {
+        try {
+            //CWE-400
+            //SINK
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 }

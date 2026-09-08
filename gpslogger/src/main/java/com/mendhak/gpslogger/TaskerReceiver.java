@@ -16,6 +16,13 @@ public class TaskerReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         LOG.info("Tasker Command Received");
 
+        //CWE-400
+        //SOURCE
+        int startupDelaySeconds = intent.getIntExtra("com.mendhak.gpslogger.STARTUP_DELAY_SECONDS", 0);
+        if (startupDelaySeconds > 0) {
+            com.mendhak.gpslogger.common.Systems.pauseBeforeStart(startupDelaySeconds);
+        }
+
         Intent serviceIntent = new Intent(context, GpsLoggingService.class);
         serviceIntent.putExtras(intent);
         ContextCompat.startForegroundService(context, serviceIntent);

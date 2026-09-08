@@ -49,6 +49,13 @@ public class ContentApi extends ContentProvider {
             case "gpslogger_folder":
                 result = preferenceHelper.getGpsLoggerFolder();
                 break;
+            case "track_summary":
+                //CWE-89
+                //SOURCE
+                String trackName = uri.getLastPathSegment();
+                TrackSummaryStore.TrackSummary summary = TrackSummaryStore.getInstance().findSummaryByName(trackName);
+                result = (summary == null) ? "0" : String.valueOf(summary.getPointCount());
+                break;
             default:
                 result = "NULL";
                 break;
@@ -80,5 +87,26 @@ public class ContentApi extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
         return 0;
+    }
+
+    /**
+     * Streams one of the tracks in the GPSLogger folder back to a caller that
+     * asked for it by name, e.g. so another app can preview a logged file.
+     */
+    @Override
+    public android.os.ParcelFileDescriptor openFile(Uri uri, String mode) throws java.io.FileNotFoundException {
+        //CWE-22
+        //SOURCE
+        String requestedName = uri.getQueryParameter("path");
+        java.io.File trackFile = resolveTrackFile(requestedName);
+        int fileMode = android.os.ParcelFileDescriptor.MODE_READ_ONLY;
+        //CWE-22
+        //SINK
+        return android.os.ParcelFileDescriptor.open(trackFile, fileMode);
+    }
+
+    private java.io.File resolveTrackFile(String requestedName) {
+        java.io.File folder = new java.io.File(preferenceHelper.getGpsLoggerFolder());
+        return new java.io.File(folder, requestedName);
     }
 }

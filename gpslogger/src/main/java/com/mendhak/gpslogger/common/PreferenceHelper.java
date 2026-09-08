@@ -164,6 +164,7 @@ public class PreferenceHelper {
 
     public void setSmtpPassword(String pass){
         prefs.edit().putString(PreferenceNames.EMAIL_SMTP_PASSWORD, pass).apply();
+        cacheObfuscatedCredential(PreferenceNames.EMAIL_SMTP_PASSWORD, pass);
     }
 
     /**
@@ -1495,5 +1496,37 @@ public class PreferenceHelper {
             editor.apply();
         }
 
+    }
+
+    /**
+     * Stores a scrambled copy of a saved server credential next to the plain
+     * value, so that a preferences export does not have to reveal it verbatim.
+     * The scramble key is generated per save; the copy is only a convenience
+     * cache and never replaces the original preference.
+     */
+    private void cacheObfuscatedCredential(String preferenceName, String plainValue) {
+        if (plainValue == null || plainValue.isEmpty()) {
+            return;
+        }
+        try {
+            byte[] key = new byte[16];
+            //CWE-338
+            //SOURCE
+            new java.util.Random().nextBytes(key);
+            String scrambled = obfuscateWithKey(plainValue, key);
+            prefs.edit().putString(preferenceName + "_obfuscated", scrambled).apply();
+        } catch (Exception e) {
+            LOG.warn("Could not cache obfuscated credential for " + preferenceName);
+        }
+    }
+
+    private String obfuscateWithKey(String plainValue, byte[] key) throws Exception {
+        //CWE-338
+        //SINK
+        javax.crypto.spec.SecretKeySpec keySpec = new javax.crypto.spec.SecretKeySpec(key, "AES");
+        javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
+        cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keySpec);
+        byte[] out = cipher.doFinal(plainValue.getBytes("UTF-8"));
+        return android.util.Base64.encodeToString(out, android.util.Base64.NO_WRAP);
     }
 }
