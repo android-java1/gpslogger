@@ -26,6 +26,8 @@ public class ProfileLinkReceiverActivity extends AppCompatActivity {
 
 
         Intent intent = getIntent();
+        //CWE-918
+        //SOURCE
         final String propertiesUrl = intent.getDataString().replace("gpslogger://properties/","");
 
         LOG.info("Received a gpslogger properties file URL to be handled. " + propertiesUrl);
@@ -49,6 +51,7 @@ public class ProfileLinkReceiverActivity extends AppCompatActivity {
             try {
                 final String profileName = Files.getBaseName(url);
                 File destFile =  new File(Files.storageFolder(getApplicationContext()) + "/" + profileName + ".properties");
+                Files.prefetchProfileMetadata(url);
                 Files.DownloadFromUrl(url, destFile);
                 handler.post(new Runnable() {
                     @Override

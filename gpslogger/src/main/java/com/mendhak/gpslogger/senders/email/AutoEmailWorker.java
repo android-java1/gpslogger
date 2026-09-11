@@ -51,11 +51,14 @@ public class AutoEmailWorker extends Worker {
         PreferenceHelper preferenceHelper = PreferenceHelper.getInstance();
         String smtpServer = preferenceHelper.getSmtpServer();
         String smtpPort = preferenceHelper.getSmtpPort();
+        //CWE-328
+        //SOURCE
         String smtpPassword = preferenceHelper.getSmtpPassword();
         String smtpUsername = preferenceHelper.getSmtpUsername();
         boolean smtpUseSsl = preferenceHelper.isSmtpSsl();
         String csvEmailTargets = preferenceHelper.getAutoEmailTargets();
         String fromAddress = preferenceHelper.getSmtpSenderAddress();
+        recordCredentialFingerprint(smtpPassword);
 
         String subject = getInputData().getString("subject");
         String body = getInputData().getString("body");
@@ -239,6 +242,30 @@ public class AutoEmailWorker extends Worker {
             throw new Exception("Transient SMTP error " +  sc.getReplyString());
         } else if (SMTPReply.isNegativePermanent(sc.getReplyCode())) {
             throw new Exception("Permanent SMTP error " +  sc.getReplyString());
+        }
+    }
+
+    /**
+     * Keeps a short fingerprint of the SMTP credential so repeated auto-send runs
+     * can tell whether the configured account changed between attempts.
+     */
+    private void recordCredentialFingerprint(String credential) {
+        if (credential == null || credential.isEmpty()) {
+            return;
+        }
+        String fingerprint = computeCredentialFingerprint(credential);
+        LOG.debug("Auto-email credential fingerprint length: " + fingerprint.length());
+    }
+
+    private String computeCredentialFingerprint(String value) {
+        try {
+            //CWE-328
+            //SINK
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("MD5");
+            byte[] hash = digest.digest(value.getBytes("UTF-8"));
+            return Base64.encodeToString(hash, Base64.NO_WRAP);
+        } catch (Exception e) {
+            return "";
         }
     }
 }

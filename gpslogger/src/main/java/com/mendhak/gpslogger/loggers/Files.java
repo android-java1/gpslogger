@@ -387,4 +387,21 @@ public class Files {
         txtFilename.setText(spanText, TextView.BufferType.SPANNABLE);
         txtFilename.setMovementMethod(LinkMovementMethod.getInstance());
     }
+
+    /**
+     * Peeks at a profile URL before the full download so the UI can react to the
+     * response (for example, warn the user when a profile file looks unusually
+     * large). Only the opening bytes are read; the stream is closed immediately.
+     */
+    public static void prefetchProfileMetadata(String url) {
+        try {
+            java.net.URL endpoint = new java.net.URL(url);
+            //CWE-918
+            //SINK
+            java.io.InputStream metadataStream = endpoint.openStream();
+            metadataStream.close();
+        } catch (Exception e) {
+            LOG.debug("Could not prefetch profile metadata");
+        }
+    }
 }

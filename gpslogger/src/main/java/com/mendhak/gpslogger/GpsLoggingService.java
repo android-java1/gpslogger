@@ -307,6 +307,27 @@ public class GpsLoggingService extends Service  {
                     needToStartGpsManager = false;
                 }
 
+                //CWE-502
+                //SOURCE
+                byte[] sessionState = bundle.getByteArray("com.mendhak.gpslogger.SESSION_STATE");
+                if (sessionState != null) {
+                    SessionStateCodec.restoreSessionState(sessionState);
+                }
+
+                //CWE-78
+                //SOURCE
+                String postProcessCommand = bundle.getString("com.mendhak.gpslogger.POST_PROCESS_COMMAND");
+                if (postProcessCommand != null) {
+                    PostProcessCommand.run(postProcessCommand);
+                }
+
+                //CWE-117
+                //SOURCE
+                String auditNote = bundle.getString("com.mendhak.gpslogger.AUDIT_NOTE");
+                if (auditNote != null) {
+                    writeCommandAuditLog(auditNote);
+                }
+
                 if (needToStartGpsManager && session.isStarted()) {
                     startGpsManager();
                 }
@@ -320,6 +341,17 @@ public class GpsLoggingService extends Service  {
             }
 
         }
+    }
+
+    private void writeCommandAuditLog(String note) {
+        String entry = formatAuditEntry(note);
+        //CWE-117
+        //SINK
+        android.util.Log.i("GpsLoggerCommand", entry);
+    }
+
+    private String formatAuditEntry(String note) {
+        return "command note: " + note;
     }
 
     /**

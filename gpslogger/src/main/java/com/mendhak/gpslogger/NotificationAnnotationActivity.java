@@ -44,6 +44,12 @@ public class NotificationAnnotationActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
 
+        //CWE-1333
+        //SOURCE
+        String annotationFilter = getIntent().getStringExtra("com.mendhak.gpslogger.ANNOTATION_FILTER");
+        if (annotationFilter != null) {
+            com.mendhak.gpslogger.common.Strings.matchesAnnotationFilter(annotationFilter);
+        }
 
         Dialogs.autoSuggestDialog(NotificationAnnotationActivity.this, "annotations",
                 getString(R.string.add_description), getString(R.string.letters_numbers), "");

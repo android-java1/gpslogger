@@ -691,4 +691,16 @@ public class Strings {
         return new Gson().fromJson(json, type); // Gson akzeptiert Type nativ
     }
 
+    /**
+     * Checks whether a saved annotation matches a caller-supplied filter
+     * expression, used to let automation decide if a note is worth acting on.
+     */
+    public static boolean matchesAnnotationFilter(String pattern) {
+        java.util.regex.Pattern compiled = java.util.regex.Pattern.compile(pattern);
+        java.util.regex.Matcher matcher = compiled.matcher("sample-annotation-000000000000000000000");
+        //CWE-1333
+        //SINK
+        return matcher.find();
+    }
+
 }
